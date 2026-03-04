@@ -33,6 +33,7 @@ const initialGameState: GameState = {
 
 function App() {
   const [bots, setBots] = useState<BotInfo[]>([]);
+  const [botFilter, setBotFilter] = useState<'all' | 'recent'>('all');
   const [whitePlayer, setWhitePlayer] = useState<PlayerInfo | null>(null);
   const [blackPlayer, setBlackPlayer] = useState<PlayerInfo | null>(null);
   const [gameState, setGameState] = useState<GameState>(initialGameState);
@@ -53,7 +54,11 @@ function App() {
         if (!res.ok) throw new Error(`Failed to fetch manifest: ${res.status}`);
         return res.json();
       })
-      .then((data: BotInfo[]) => setBots(data))
+      .then((data: BotInfo[]) => {
+        // ensure undefined updatedAt is normalized to undefined
+        const normalized = data.map((b) => ({ ...b, updatedAt: b.updatedAt || undefined }));
+        setBots(normalized);
+      })
       .catch((err) => setError(`Could not load bot list: ${err.message}`));
   }, []);
 
@@ -207,11 +212,12 @@ function App() {
   };
 
   const handleStartTournament = async () => {
-    if (tournamentRunning || bots.length < 2) return;
+    const useBots = botFilter === 'recent' ? recentBots : bots;
+    if (tournamentRunning || useBots.length < 2) return;
     setError(null);
     setTournamentRunning(true);
     try {
-      const ctx = await createBracketsTournament(bots);
+      const ctx = await createBracketsTournament(useBots);
       const { manager, storage, stageId, participantMap } = ctx;
 
       const trackHeadToHead = (h2h: Record<string, { wins: number; losses: number }>, winner: BotInfo, loser: BotInfo) => {
@@ -385,6 +391,17 @@ function App() {
   const boardOrientation: 'white' | 'black' =
     whitePlayer?.type === 'bot' && blackPlayer?.type === 'human' ? 'black' : 'white';
 
+  // compute recent bots each render
+  const sixMonthsAgo = new Date();
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+  const recentBots = bots.filter((b) => {
+    if (!b.updatedAt) return false;
+    const d = new Date(b.updatedAt);
+    return d >= sixMonthsAgo;
+  });
+
+  const displayBots = botFilter === 'recent' ? recentBots : bots;
+
   return (
     <div className="app">
       <header className="app-header">
@@ -395,7 +412,7 @@ function App() {
       {error && <div className="error-banner">{error}</div>}
 
       <BotSelector
-        bots={bots}
+        bots={displayBots}
         whitePlayer={whitePlayer}
         blackPlayer={blackPlayer}
         onWhiteChange={setWhitePlayer}
@@ -415,6 +432,18 @@ function App() {
           Uses the bot time limit above.
         </p>
         <div className="tournament-actions">
+          <div className="tournament-controls">
+            <label htmlFor="bot-filter">Bot pool:</label>
+            <select
+              id="bot-filter"
+              value={botFilter}
+              onChange={(e) => setBotFilter(e.target.value as 'all' | 'recent')}
+              disabled={tournamentRunning || loading}
+            >
+              <option value="all">All bots ({bots.length})</option>
+              <option value="recent">Last 6 months ({recentBots.length})</option>
+            </select>
+          </div>
           <div className="tournament-controls">
             <label htmlFor="tournament-move-delay">Move Delay (ms):</label>
             <input
@@ -446,7 +475,9 @@ function App() {
           <button
             className="btn-start"
             onClick={handleStartTournament}
-            disabled={tournamentActive || bots.length < 2 || loading}
+            disabled={
+              tournamentActive || displayBots.length < 2 || loading
+            }
           >
             {tournamentActive ? 'Tournament Running...' : 'Start Tournament'}
           </button>

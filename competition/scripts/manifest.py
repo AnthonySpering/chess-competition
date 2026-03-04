@@ -10,16 +10,24 @@ import json
 import sys
 
 
-def add_entry(manifest_file: str, username: str, avatar: str, fork_url: str) -> None:
-    """Append a bot entry to the manifest."""
+def add_entry(manifest_file: str, username: str, avatar: str, fork_url: str, updated_at: str | None = None) -> None:
+    """Append a bot entry to the manifest.
+
+    If `updated_at` is provided it will be stored as an ISO timestamp
+    on the entry; this allows the frontend to filter for recent bots.
+    """
     with open(manifest_file) as f:
         manifest = json.load(f)
 
-    manifest.append({
+    entry = {
         "username": username,
         "avatar": avatar,
         "forkUrl": fork_url,
-    })
+    }
+    if updated_at:
+        entry["updatedAt"] = updated_at
+
+    manifest.append(entry)
 
     with open(manifest_file, "w") as f:
         json.dump(manifest, f)
@@ -42,11 +50,13 @@ def main() -> None:
     command = sys.argv[1]
 
     if command == "add":
-        if len(sys.argv) != 6:
-            print(f"Usage: {sys.argv[0]} add <manifest_file> <username> <avatar_url> <fork_url>",
+        # added optional fifth parameter for updated_at
+        if len(sys.argv) not in (6, 7):
+            print(f"Usage: {sys.argv[0]} add <manifest_file> <username> <avatar_url> <fork_url> [updated_at]",
                   file=sys.stderr)
             sys.exit(1)
-        add_entry(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
+        updated_at = sys.argv[6] if len(sys.argv) == 7 else None
+        add_entry(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], updated_at)
 
     elif command == "format":
         if len(sys.argv) != 4:

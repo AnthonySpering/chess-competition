@@ -93,10 +93,15 @@ jobs:
 
       # ── 6. Build competition bots & React app ─────────────────
       - name: Build all fork bots
+        # optional RECENT_ONLY can be set in the workflow or via repository vars
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RECENT_ONLY: ${{ env.RECENT_ONLY || '' }}
         run: |
           source emsdk/emsdk_env.sh
+          # if RECENT_ONLY is set the script will compile only bots updated within
+          # the last six months; useful to speed up CI when the full corpus is
+          # large.  Leave unset to process every fork.
           bash competition/build-bots.sh
 
       - name: Build competition React app

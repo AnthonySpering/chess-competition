@@ -2,6 +2,13 @@
 
 This is a C++ chess competition base repository. Here we are going to host only the chess engine part of the competition. The competition will be held on a web platform, and the source code will be available on a different repository.
 
+> **Note:** the web UI supports a "recent bots" filter. Bots are tagged with the
+> timestamp of their last GitHub activity and students can choose to run
+> tournaments using either **all bots** or only those updated within the past
+> six months. The build scripts capture this `updated_at` field and even allow
+> optional filtering via `RECENT_ONLY=1`.
+
+
 ## Main activity
 
 You have to code a chess engine from the ground up. You will receive a string as input following [FEN](https://www.chess.com/terms/fen-chess) notation and the output should be the move as [UCI](https://en.wikipedia.org/wiki/Universal_Chess_Interface). 

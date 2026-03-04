@@ -19,3 +19,7 @@ competition/web/dist/
 .DS_Store
 
 competition/web/node_modules/
+
+competition/web/public/bots/
+
+competition/emsdk

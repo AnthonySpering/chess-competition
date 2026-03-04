@@ -2,6 +2,8 @@ export interface BotInfo {
   username: string;
   avatar: string;
   forkUrl: string;
+  /** ISO timestamp of the most recent commit/fork update; may be missing */
+  updatedAt?: string;
 }
 
 export type PlayerType = 'bot' | 'human';
