@@ -10,7 +10,7 @@ using namespace ChessSimulator;
 
 static constexpr int INF = 1000000;
 static constexpr int MATE_SCORE = 100000;
-static constexpr int MAX_DEPTH = 6;
+static constexpr int MAX_DEPTH = 64;
 static uint8_t currentAge = 0;
 static uint64_t repetitionTable[1024];
 static std::chrono::high_resolution_clock::time_point searchStart;
