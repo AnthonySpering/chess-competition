@@ -1096,8 +1096,7 @@ std::string ChessSimulator::Move(std::string fen, int timeLimitMs)
         return "";
 
     searchStart = std::chrono::high_resolution_clock::now();
-    timeLimitMsGlobal = timeLimitMs;
-
+    timeLimitMsGlobal = timeLimitMs - 500;  // stop ~50ms early
     clearTT();
     currentAge++;
 
